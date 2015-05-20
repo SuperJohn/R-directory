@@ -1,0 +1,106 @@
+---
+title: "Untitled"
+author: "john houghton"
+date: "Saturday, January 10, 2015"
+output: html_document
+runtime: shiny
+---
+
+This R Markdown document is made interactive using Shiny. Unlike the more traditional workflow of creating static reports, you can now create documents that allow your readers to change the assumptions underlying your analysis and see the results immediately. 
+
+To learn more, see [Interactive Documents](http://rmarkdown.rstudio.com/authoring_shiny.html).
+
+## Inputs and Outputs
+
+You can embed Shiny inputs and outputs in your document. Outputs are automatically updated whenever inputs change.  This demonstrates how a standard R plot can be made interactive by wrapping it in the Shiny `renderPlot` function. The `selectInput` and `sliderInput` functions create the input widgets used to drive the plot.
+
+Example 1
+
+```{r, echo=FALSE}
+
+library(shiny)
+library(ggplot2)  # for the diamonds dataset
+
+shinyUI(fluidPage(
+  title = 'Examples of DataTables',
+  sidebarLayout(
+    sidebarPanel(
+      conditionalPanel(
+        'input.dataset === "diamonds"',
+        checkboxGroupInput('show_vars', 'Columns in diamonds to show:',
+                           names(diamonds), selected = names(diamonds))
+      ),
+      conditionalPanel(
+        'input.dataset === "mtcars"',
+        helpText('Click the column header to sort a column.')
+      ),
+      conditionalPanel(
+        'input.dataset === "iris"',
+        helpText('Display 5 records by default.')
+      )
+    ),
+    mainPanel(
+      tabsetPanel(
+        id = 'dataset',
+        tabPanel('diamonds', dataTableOutput('mytable1')),
+        tabPanel('mtcars', dataTableOutput('mytable2')),
+        tabPanel('iris', dataTableOutput('mytable3'))
+      )
+    )
+  )
+))
+
+```
+
+
+```{r, echo=FALSE}
+
+
+library(shiny)
+library(datasets)
+
+shinyServer(function(input, output) {
+
+  # a large table, reative to input$show_vars
+  output$mytable1 <- renderDataTable({
+    library(ggplot2)
+    diamonds[, input$show_vars, drop = FALSE]
+  })
+
+  # sorted columns are colored now because CSS are attached to them
+  output$mytable2 <- renderDataTable({
+    mtcars
+  }, options = list(orderClasses = TRUE))
+
+  # customize the length drop-down menu; display 5 rows per page by default
+  output$mytable3 <- renderDataTable({
+    iris
+  }, options = list(lengthMenu = c(5, 30, 50), pageLength = 5))
+
+})
+```
+
+
+
+
+## Embedded Application
+
+It's also possible to embed an entire Shiny application within an R Markdown document using the `shinyAppDir` function. This example embeds a Shiny application located in another directory:
+
+```{r, echo=FALSE}
+shinyAppDir(
+  system.file("examples/06_tabsets", package="shiny"),
+  options=list(
+    width="100%", height=550
+  )
+)
+```
+
+Note the use of the `height` parameter to determine how much vertical space the embedded application should occupy.
+
+You can also use the `shinyApp` function to define an application inline rather then in an external directory.
+
+In all of R code chunks above the `echo = FALSE` attribute is used. This is to prevent the R code within the chunk from rendering in the document alongside the Shiny components.
+
+
+

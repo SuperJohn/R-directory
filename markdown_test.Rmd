@@ -1,0 +1,76 @@
+---
+title: "markdown test"
+author: "john houghton"
+date: "Friday, January 09, 2015"
+output:
+  html_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+summary(cars)
+```
+
+Enter your action ids here, comma separated
+
+```{r, echo = FALSE}
+action_ids <- " 20525217,20524903 "
+```
+
+**Here, I'm invisibly loading a live action_report**
+
+```{r, echo=FALSE}
+library(RODBC)
+conn <- odbcConnect("rfi_meta_data")
+action_report_query <- ("SELECT   c.campaign_name AS campaign_name
+                        , c.action_name AS action_name
+                        , c.conversion_day AS conversion_day
+                        , SUM(c.click_through) as click_through
+                        , SUM(view_through) as view_through
+                        , SUM(c.click_through) + SUM(view_through) AS total_conversions 
+                        
+                        FROM (   
+                          SELECT cav.name AS action_name  
+                          , IF(b.campaign_id=0,'alien',c.label) AS campaign_name
+                          , b.*
+                            FROM	
+                          (	
+                            SELECT  ca.current_version_id AS current_version_id	
+                            , a.click_through + a.view_through AS total_conversions
+                            , a.* 
+                              FROM rfi_meta_data.rfi_aggregate_conversion_action_agg a	
+                            LEFT JOIN rfi_conversion_action ca ON a.conversion_action_id=ca.id
+                            WHERE a.conversion_action_id IN (%s) 	
+                            AND conversion_day BETWEEN DATE_SUB(NOW(), INTERVAL 90 DAY) AND NOW()
+                            #NAME?
+                          ) b	
+                          LEFT JOIN rfi_conversion_action_version cav ON cav.version_id=b.current_version_id	
+                          LEFT JOIN campaign c ON b.campaign_id=c.id	
+                        ) c	
+                        
+                        GROUP BY c.campaign_name	
+                        , c.action_name
+                        , c.conversion_day
+                        ORDER BY conversion_day DESC"	) 
+action_report <- sqlQuery(conn, sprintf(action_report_query, action_ids)) 
+
+
+```
+
+
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+library(ggplot2)
+library(ggthemes)
+ggplot(action_report, aes(x = conversion_day, y = total_conversions, colour = action_name)) + stat_smooth(level = 0.99) + geom_point()+ theme_economist() 
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
