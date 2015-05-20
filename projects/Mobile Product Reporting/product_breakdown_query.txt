@@ -1,0 +1,11 @@
+select date as date
+, initiative
+, product
+, round(sum(rfi_revenue),0) as revenue
+, round(sum(rfi_cost),0) as cost
+, round(sum(rfi_conversions),0) as conversions
+, round(sum(advertiser_impressions),0) as impressions
+from rfi_test.jh_mobile_product_breakdown
+group by date
+, initiative
+, product

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Vignette Author" />
+
+<meta name="date" content="2015-05-07" />
+
+<title>Vignette Title</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<link href="data:text/css,body%20%7B%0A%20%20background%2Dcolor%3A%20%23fff%3B%0A%20%20margin%3A%201em%20auto%3B%0A%20%20max%2Dwidth%3A%20700px%3B%0A%20%20overflow%3A%20visible%3B%0A%20%20padding%2Dleft%3A%202em%3B%0A%20%20padding%2Dright%3A%202em%3B%0A%20%20font%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0A%20%20font%2Dsize%3A%2014px%3B%0A%20%20line%2Dheight%3A%201%2E35%3B%0A%7D%0A%0A%23header%20%7B%0A%20%20text%2Dalign%3A%20center%3B%0A%7D%0A%0A%23TOC%20%7B%0A%20%20clear%3A%20both%3B%0A%20%20margin%3A%200%200%2010px%2010px%3B%0A%20%20padding%3A%204px%3B%0A%20%20width%3A%20400px%3B%0A%20%20border%3A%201px%20solid%20%23CCCCCC%3B%0A%20%20border%2Dradius%3A%205px%3B%0A%0A%20%20background%2Dcolor%3A%20%23f6f6f6%3B%0A%20%20font%2Dsize%3A%2013px%3B%0A%20%20line%2Dheight%3A%201%2E3%3B%0A%7D%0A%20%20%23TOC%20%2Etoctitle%20%7B%0A%20%20%20%20font%2Dweight%3A%20bold%3B%0A%20%20%20%20font%2Dsize%3A%2015px%3B%0A%20%20%20%20margin%2Dleft%3A%205px%3B%0A%20%20%7D%0A%0A%20%20%23TOC%20ul%20%7B%0A%20%20%20%20padding%2Dleft%3A%2040px%3B%0A%20%20%20%20margin%2Dleft%3A%20%2D1%2E5em%3B%0A%20%20%20%20margin%2Dtop%3A%205px%3B%0A%20%20%20%20margin%2Dbottom%3A%205px%3B%0A%20%20%7D%0A%20%20%23TOC%20ul%20ul%20%7B%0A%20%20%20%20margin%2Dleft%3A%20%2D2em%3B%0A%20%20%7D%0A%20%20%23TOC%20li%20%7B%0A%20%20%20%20line%2Dheight%3A%2016px%3B%0A%20%20%7D%0A%0Atable%20%7B%0A%20%20margin%3A%201em%20auto%3B%0A%20%20border%2Dwidth%3A%201px%3B%0A%20%20border%2Dcolor%3A%20%23DDDDDD%3B%0A%20%20border%2Dstyle%3A%20outset%3B%0A%20%20border%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0A%20%20border%2Dwidth%3A%202px%3B%0A%20%20padding%3A%205px%3B%0A%20%20border%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0A%20%20border%2Dwidth%3A%201px%3B%0A%20%20border%2Dstyle%3A%20inset%3B%0A%20%20line%2Dheight%3A%2018px%3B%0A%20%20padding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0A%20%20border%2Dleft%2Dstyle%3A%20none%3B%0A%20%20border%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0A%20%20background%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0A%0Ap%20%7B%0A%20%20margin%3A%200%2E5em%200%3B%0A%7D%0A%0Ablockquote%20%7B%0A%20%20background%2Dcolor%3A%20%23f6f6f6%3B%0A%20%20padding%3A%200%2E25em%200%2E75em%3B%0A%7D%0A%0Ahr%20%7B%0A%20%20border%2Dstyle%3A%20solid%3B%0A%20%20border%3A%20none%3B%0A%20%20border%2Dtop%3A%201px%20solid%20%23777%3B%0A%20%20margin%3A%2028px%200%3B%0A%7D%0A%0Adl%20%7B%0A%20%20margin%2Dleft%3A%200%3B%0A%7D%0A%20%20dl%20dd%20%7B%0A%20%20%20%20margin%2Dbottom%3A%2013px%3B%0A%20%20%20%20margin%2Dleft%3A%2013px%3B%0A%20%20%7D%0A%20%20dl%20dt%20%7B%0A%20%20%20%20font%2Dweight%3A%20bold%3B%0A%20%20%7D%0A%0Aul%20%7B%0A%20%20margin%2Dtop%3A%200%3B%0A%7D%0A%20%20ul%20li%20%7B%0A%20%20%20%20list%2Dstyle%3A%20circle%20outside%3B%0A%20%20%7D%0A%20%20ul%20ul%20%7B%0A%20%20%20%20margin%2Dbottom%3A%200%3B%0A%20%20%7D%0A%0Apre%2C%20code%20%7B%0A%20%20background%2Dcolor%3A%20%23f7f7f7%3B%0A%20%20border%2Dradius%3A%203px%3B%0A%20%20color%3A%20%23333%3B%0A%7D%0Apre%20%7B%0A%20%20white%2Dspace%3A%20pre%2Dwrap%3B%20%20%20%20%2F%2A%20Wrap%20long%20lines%20%2A%2F%0A%20%20border%2Dradius%3A%203px%3B%0A%20%20margin%3A%205px%200px%2010px%200px%3B%0A%20%20padding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0A%20%20background%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0A%0Acode%20%7B%0A%20%20font%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0A%20%20font%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0A%20%20padding%3A%202px%200px%3B%0A%7D%0A%0Adiv%2Efigure%20%7B%0A%20%20text%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0A%20%20background%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20padding%3A%202px%3B%0A%20%20border%3A%201px%20solid%20%23DDDDDD%3B%0A%20%20border%2Dradius%3A%203px%3B%0A%20%20border%3A%201px%20solid%20%23CCCCCC%3B%0A%20%20margin%3A%200%205px%3B%0A%7D%0A%0Ah1%20%7B%0A%20%20margin%2Dtop%3A%200%3B%0A%20%20font%2Dsize%3A%2035px%3B%0A%20%20line%2Dheight%3A%2040px%3B%0A%7D%0A%0Ah2%20%7B%0A%20%20border%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0A%20%20padding%2Dtop%3A%2010px%3B%0A%20%20padding%2Dbottom%3A%202px%3B%0A%20%20font%2Dsize%3A%20145%25%3B%0A%7D%0A%0Ah3%20%7B%0A%20%20border%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0A%20%20padding%2Dtop%3A%2010px%3B%0A%20%20font%2Dsize%3A%20120%25%3B%0A%7D%0A%0Ah4%20%7B%0A%20%20border%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0A%20%20margin%2Dleft%3A%208px%3B%0A%20%20font%2Dsize%3A%20105%25%3B%0A%7D%0A%0Ah5%2C%20h6%20%7B%0A%20%20border%2Dbottom%3A%201px%20solid%20%23ccc%3B%0A%20%20font%2Dsize%3A%20105%25%3B%0A%7D%0A%0Aa%20%7B%0A%20%20color%3A%20%230033dd%3B%0A%20%20text%2Ddecoration%3A%20none%3B%0A%7D%0A%20%20a%3Ahover%20%7B%0A%20%20%20%20color%3A%20%236666ff%3B%20%7D%0A%20%20a%3Avisited%20%7B%0A%20%20%20%20color%3A%20%23800080%3B%20%7D%0A%20%20a%3Avisited%3Ahover%20%7B%0A%20%20%20%20color%3A%20%23BB00BB%3B%20%7D%0A%20%20a%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0A%20%20%20%20text%2Ddecoration%3A%20underline%3B%20%7D%0A%20%20a%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0A%20%20%20%20text%2Ddecoration%3A%20underline%3B%20%7D%0A%0A%2F%2A%20Class%20described%20in%20https%3A%2F%2Fbenjeffrey%2Ecom%2Fposts%2Fpandoc%2Dsyntax%2Dhighlighting%2Dcss%0A%20%20%20Colours%20from%20https%3A%2F%2Fgist%2Egithub%2Ecom%2Frobsimmons%2F1172277%20%2A%2F%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%2F%2A%20Keyword%20%2A%2F%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%2F%2A%20DataType%20%2A%2F%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%2F%2A%20DecVal%20%28decimal%20values%29%20%2A%2F%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20BaseN%20%2A%2F%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20Float%20%2A%2F%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20Char%20%2A%2F%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20String%20%2A%2F%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%2F%2A%20Comment%20%2A%2F%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%2F%2A%20OtherToken%20%2A%2F%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%2F%2A%20AlertToken%20%2A%2F%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%2F%2A%20Function%20calls%20%2A%2F%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%2F%2A%20ErrorTok%20%2A%2F%0A%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+<div id="header">
+<h1 class="title">Vignette Title</h1>
+<h4 class="author"><em>Vignette Author</em></h4>
+<h4 class="date"><em>2015-05-07</em></h4>
+</div>
+
+
+<p>Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The <code>html_vignette</code> output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The <code>html_vignette</code> format:</p>
+<ul>
+<li>Never uses retina figures</li>
+<li>Has a smaller default figure size</li>
+<li>Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style</li>
+</ul>
+<div id="vignette-info" class="section level2">
+<h2>Vignette Info</h2>
+<p>Note the various macros within the <code>vignette</code> setion of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the <code>title</code> field and the <code>\VignetteIndexEntry</code> to match the title of your vignette.</p>
+</div>
+<div id="styles" class="section level2">
+<h2>Styles</h2>
+<p>The <code>html_vignette</code> template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:</p>
+<pre><code>output: 
+  rmarkdown::html_vignette:
+    css: mystyles.css</code></pre>
+</div>
+<div id="figures" class="section level2">
+<h2>Figures</h2>
+<p>The figure sizes have been customised so that you can easily put two images side-by-side.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(<span class="dv">1</span>:<span class="dv">10</span>)
+<span class="kw">plot</span>(<span class="dv">10</span>:<span class="dv">1</span>)</code></pre>
+<p><img src="data:image/png;base64,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" /> <img src="data:image/png;base64,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" /></p>
+<p>You can enable figure captions by <code>fig_caption: yes</code> in YAML:</p>
+<pre><code>output:
+  rmarkdown::html_vignette:
+    fig_caption: yes</code></pre>
+<p>Then you can use the chunk option <code>fig.cap = &quot;Your figure caption.&quot;</code> in <strong>knitr</strong>.</p>
+</div>
+<div id="more-examples" class="section level2">
+<h2>More Examples</h2>
+<p>You can write math expressions, e.g. <span class="math">\(Y = X\beta + \epsilon\)</span>, footnotes<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>, and tables, e.g. using <code>knitr::kable()</code>.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="right">speed</th>
+<th align="right">dist</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">4</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">4</td>
+<td align="right">10</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">4</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">22</td>
+</tr>
+<tr class="odd">
+<td align="right">8</td>
+<td align="right">16</td>
+</tr>
+<tr class="even">
+<td align="right">9</td>
+<td align="right">10</td>
+</tr>
+<tr class="odd">
+<td align="right">10</td>
+<td align="right">18</td>
+</tr>
+<tr class="even">
+<td align="right">10</td>
+<td align="right">26</td>
+</tr>
+<tr class="odd">
+<td align="right">10</td>
+<td align="right">34</td>
+</tr>
+<tr class="even">
+<td align="right">11</td>
+<td align="right">17</td>
+</tr>
+</tbody>
+</table>
+<p>Also a quote using <code>&gt;</code>:</p>
+<blockquote>
+<p>“He who gives up [code] safety for [code] speed deserves neither.” (<a href="https://twitter.com/hadleywickham/status/504368538874703872">via</a>)</p>
+</blockquote>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>A footnote here.<a href="#fnref1">↩</a></p></li>
+</ol>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1 @@
+select if(datediff(max(date),curdate()) <-5,'not updated','updated') as last_updated From rfi_test.jh_monthly_mobile_product

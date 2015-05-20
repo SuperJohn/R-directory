@@ -1,0 +1,20 @@
+select year(day) as year
+, month(day) as month_num
+, date_format(day,'%b') as month
+, month_year
+, round(sum(rfi_revenue),0) as revenue
+, round( 1 / (dayofmonth(max(date)) / dayofmonth(last_day(min(date)))) * sum(rfi_revenue) ,0) as projected_revenue
+, round(sum(rfi_cost), 0) as cost
+, round( 1 / (dayofmonth(max(date)) / dayofmonth(last_day(min(date)))) * sum(rfi_cost) ,0) as projected_cost
+, round(1-( sum(rfi_cost)/sum(rfi_revenue) ),2) as margin
+, count(distinct campaign_id) as count_campaigns
+, round(sum(rfi_revenue) / dayofmonth(max(date)),0) as avg_daily_revenue 
+, sum(rfi_impressions) as impressions
+, max(date) as max_date
+, dayofmonth(max(date)) as days_completed
+, dayofmonth(last_day(min(date))) as num_days
+ from rfi_test.jh_monthly_mobile_product
+group by year(day)
+, month(day)
+, date_format(day,'%b')
+, month_year

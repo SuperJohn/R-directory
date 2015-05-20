@@ -1,0 +1,60 @@
+-- drop existing table in order to overwrite with current data
+ drop table rfi_test.jh_monthly_mobile_product; 
+-- set number of months to pull, which affects query time, i.e. 12 = 3 mins, 1 = 44 secs
+
+create table rfi_test.jh_monthly_mobile_product as
+
+    SELECT day as day, 
+  	 year(day) as year,
+		month(day) as month, 
+        CONCAT(MONTHNAME(DAY),
+                ' ',
+                DATE_FORMAT(DAY, '%Y')) as month_year,
+        DATE_FORMAT(DAY, '%Y/%c/%d') as date,
+        ru_am.region AS region,
+        ap.campaign_id,
+        ap.line_item_id,
+        jn.campaign_name,
+        jn.lineitem_name,
+        SUM(rfi_clicks) AS rfi_clicks,
+        SUM(adv_clicks) AS advertiser_clicks,
+        SUM(rfi_client_views) AS rfi_impressions,
+        SUM(adv_client_views) AS advertiser_impressions,
+        SUM(cost) AS rfi_cost,
+        SUM(rfi_revenue) AS rfi_revenue,
+        SUM(adv_revenue) AS advertiser_paid_us_revenue,
+        SUM(rfi_thisday_conversions) AS rfi_conversions_by_convday,
+        SUM(adv_thisday_conversions) AS advertiser_conversions_by_convday,
+        SUM(media_cost) AS media_cost
+    FROM
+        rfi_meta_data.apollo_mv ap
+            JOIN
+        (SELECT DISTINCT
+            a.campaign_id,
+                a.label AS campaign_name,
+                b.line_item_id,
+                b.label AS lineitem_name,
+                a.end_date
+        FROM
+            rfi_meta_data.campaign a
+        JOIN rfi_meta_data.rfi_line_item_version b ON a.campaign_id = b.campaign_id
+        WHERE
+            (LOWER(a.label) LIKE '%mobile%'
+                OR LOWER(b.label) LIKE '%mobile%'
+                OR LOWER(b.label) LIKE '% ios%'
+                OR LOWER(b.label) LIKE '%tablet%'
+                OR LOWER(b.label) LIKE '% android %'
+                OR b.line_item_id IN (32967 , 39717, 111665, 111647, 111663, 111659, 108109, 108111, 108859, 111533, 108863, 111535, 108867, 111537, 108869, 111539, 108205, 108851, 106613, 122001))
+                AND a.campaign_id NOT IN (11523 , 11683, 11211, 11523, 12433, 12627, 12765, 12565, 8689, 8011, 9985, 10351, 11989, 13270, 13516, 14541, 14871, 15417, 15617, 14575, 13918, 15603, 15763, 8503, 15753, 13135, 19581, 20023, 17979, 19019, 19581, 20023, 22377, 22233, 22893, 22901, 22943, 23335, 22405, 23995, 16977, 23693, 25873, 24483, 24855, 26017, 27371, 19279, 26541, 28119, 26285, 27337, 28427, 19383, 31023, 30959, 30337, 25009, 30959, 32391, 29633, 32481, 30955, 32491, 32907, 34517, 35761, 35547, 34077, 34415, 34709, 35781, 34901, 37129, 34687, 35649, 38391, 38137, 36533, 36647, 35225, 37739, 36461, 36067, 38247, 38249, 36391, 35491, 40905, 35777, 38205, 35391, 26221, 36165, 39713, 37959, 38053, 35423, 40697, 34407, 25901, 43001, 36663, 39961, 35699, 45121, 43897, 46209, 46089, 38323, 40601)
+                AND b.line_item_id NOT IN (47895 , 47899, 47901, 47903, 47905, 47909, 47911, 47913, 47915, 47917, 47921, 47925, 47929, 47933, 47935, 47939, 47941, 47943, 47945, 47947, 47907, 47919, 47937, 47931, 44193, 44197, 23055, 40693, 88469, 94883, 94887, 94627, 94885, 94891, 84181, 84179, 94369, 94371, 95963, 95965, 95971, 94361, 94363, 96275, 96273, 93045, 93043, 93047, 93053, 100463, 100227, 100229, 105913, 105915, 101833, 101835, 106473, 106459, 109507, 100463, 108267, 108265, 107291, 108873, 109579, 109577, 109557, 109555, 108349, 108347, 123631, 123637, 118095, 118097, 140153, 126981, 126983, 123313, 123315, 125743, 125745, 127633, 127637, 129581, 129521, 129523, 132151, 132331, 128569, 133905, 109577, 109579, 127957, 149785, 149801, 164513, 164529)
+                AND b.is_current = 1) jn ON ap.campaign_id = jn.campaign_id
+            AND ap.line_item_id = jn.line_item_id
+            LEFT JOIN
+        rfi_meta_data.role_assignments ra_am ON jn.campaign_id = ra_am.object_id
+            AND ra_am.object_type = 'Campaign'
+            AND ra_am.role = 'account_manager'
+            LEFT JOIN
+        rfi_meta_data.rfi_user ru_am ON ra_am.assignee_id = ru_am.id
+    WHERE
+        day >= '2013-11-01' AND day <= CURDATE() - 1
+    GROUP BY day, year(day), month(day), CONCAT(MONTHNAME(DAY), DATE_FORMAT(DAY, '%y')) , DATE_FORMAT(DAY, '%Y/%c/%d') , ap.campaign_id , ap.line_item_id , jn.campaign_name , jn.lineitem_name;

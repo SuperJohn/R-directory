@@ -1,0 +1,82 @@
+---
+title: "campaign_analysis"
+output: html_document
+---
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+#load packages
+library(ggplot2)
+library(plyr)
+library(RODBC)
+library(lubridate)
+library(scales)
+library(reshape2)
+library(sqldf)
+```
+
+```{r, echo=FALSE}
+library(RODBC)
+conn <- odbcConnect("rfi_meta_data")
+query_file <- 'queries/apollo_mv.txt'
+query <- readChar(query_file, file.info(query_file)$size)
+# Query is broken - tried to add parameter
+# apollo_mv <- sqlQuery(conn,query)
+
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, fig.width=10, fig.height=4}
+# LOAD CAMPAIGN AND NETWORK DATA SETS
+
+apollo_mv_campaign <- read.csv("C:/Users/john/Google Drive/R Directory/campaign_analysis/data/apollo_mv_campaign.csv")
+
+apollo_mv_campaign_no_na <- read.csv("C:/Users/john/Google Drive/R Directory/campaign_analysis/data/apollo_mv_campaign.csv", na.strings=c("NA", ""))
+
+
+
+network_by_campaign <- read.csv("C:/Users/john/Google Drive/R Directory/campaign_analysis/data/network_by_campaign.csv")
+
+network_by_campaign$Imps<-as.numeric(network_by_campaign$Imps)
+network_by_campaign$Clicks<-as.numeric(network_by_campaign$Clicks)
+network_by_campaign$ctr<-network_by_campaign$Clicks/network_by_campaign$Imps
+library(lubridate)
+network_by_campaign$Date<-ymd(network_by_campaign$Date)
+```
+
+<h1>Coupons Campaign CTR by Date</h1>
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+library(sqldf)
+test<-sqldf("select * from network_by_campaign where Analyst = 'John Houghton' and Advertiser = 'Coupons.com' ")
+test<-sqldf("select * from test where Advertiser = 'Coupons.com' ")
+library(lattice) 
+attach(test)
+       # scatterplots for each combination of two factors 
+       xyplot(ctr~Date|CID, 
+              main="CTR by Campaign", 
+              ylab="ctr", xlab="Date", ylim=c(0,0.005))
+```
+
+<h1>Given a tactic (or campaign), show change in median daily bids, by bid parameter</h1>
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+storm_tactic_bid_stats <- read.csv("C:/Users/john/Google Drive/R Directory/campaign_analysis/data/storm_tactic_bid_stats.csv", stringsAsFactors=FALSE)
+library(lubridate)
+storm_tactic_bid_stats$date<-ymd(storm_tactic_bid_stats$date)
+storm_tactic_bid_stats$cpm_bid<-as.numeric(storm_tactic_bid_stats$cpm_bid)
+
+# test process on bid_stats
+x<-storm_tactic_bid_stats[,c("date","cpm_bid","cpc_bid","cpa_bid")]
+library(reshape2)
+x<-melt(x,id="date")
+x$value<-as.numeric(x$value)
+library(plyr)
+x<-ddply(x,c("date","variable"),summarize,median = median(value),.progress = "text")
+#library(reshape2)
+#x<-dcast(x,date~variable,value.var="median")
+library(ggplot2)
+ggplot(x,aes(x=date,y=median,group=variable,color=as.factor(variable))) + geom_line()+ theme_minimal()+ scale_y_continuous()
+
+```
+?ddply
+
+Analyze Campaign URL 
+https://internal.rocketfuel.com/campaigns/60575/analyze?db=vertica&metrics=adv_impressions;spend;adv_thisday_conversions;cost;adv_clicks;rfi_thisday_conversions_view_through;rfi_thisday_conversions_click_through;rfi_thisday_conversions&row=device;date;line_item;tactic;line_item_id;tactic_id;publisher;campaign;views_source;clicks_source;conversions_source;thisday_conversions_source&column=&dates=2015-05-01%20-%202015-05-14&ch=0&lPanel=1&rPanel=1&botPanel=1&cm:g=month&cm:r=area&tot=0&pct=0&chart_metric=adv_impressions&sort_by=month&sort_order=ASC&queryMode=manual&cur=USD&cr=&tz=America/New_York
+

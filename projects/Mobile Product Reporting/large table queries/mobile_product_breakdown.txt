@@ -1,0 +1,173 @@
+create table rfi_test.jh_mobile_product_breakdown as
+select
+    *,
+    case
+        when
+            lower(a.Product) LIKE '%mobile web cpa%'
+                OR lower(a.Product) LIKE '%app install%'
+                OR lower(a.Product) LIKE '%app dr%'
+                OR lower(a.Product) LIKE '%cross device%'
+                OR lower(a.Product) LIKE '%local lift%'
+                OR lower(a.Product) LIKE '%local lift with placed%'
+        then
+            'DR'
+        else 'Brand'
+    end as initiative
+FROM
+    (SELECT
+        DATE_FORMAT(DAY, '%Y/%c/%d') AS date,
+            ap.campaign_id,
+            case
+                when
+                    jn.app_flag <> ''
+                then
+                    (case
+                        when
+                            LOWER(jn.campaign_name) LIKE '%app install%'
+                                OR LOWER(jn.li_label) LIKE '%app install%'
+                                OR LOWER(jn.campaign_name) LIKE '%app-install%'
+                                OR LOWER(jn.li_label) LIKE '%app-install%'
+                                OR LOWER(jn.campaign_name) LIKE '%app_install%'
+                                OR LOWER(jn.li_label) LIKE '%app_install%'
+                                OR LOWER(jn.campaign_name) LIKE '%app download%'
+                                OR LOWER(jn.li_label) LIKE '%app download%'
+                                OR LOWER(jn.campaign_name) LIKE '%app-download%'
+                                OR LOWER(jn.li_label) LIKE '%app-download%'
+                                OR LOWER(jn.campaign_name) LIKE '%app_download%'
+                                OR LOWER(jn.li_label) LIKE '%app_download%'
+                        then
+                            'App Install'
+                        else 'App DR'
+                    end)
+                when
+                    LOWER(jn.campaign_name) LIKE '% xd %'
+                        OR LOWER(jn.li_label) LIKE '% xd %'
+                        OR LOWER(jn.campaign_name) LIKE '%cross device%'
+                        OR LOWER(jn.li_label) LIKE '%cross device%'
+                        OR LOWER(jn.campaign_name) LIKE '%xdevice%'
+                        OR LOWER(jn.li_label) LIKE '%xdevice%'
+                        OR LOWER(jn.campaign_name) LIKE '%x-device%'
+                        OR LOWER(jn.li_label) LIKE '%x-device%'
+                        OR LOWER(jn.campaign_name) LIKE '%x - device%'
+                        OR LOWER(jn.li_label) LIKE '%x - device%'
+                        OR LOWER(jn.campaign_name) LIKE '%cross - device%'
+                        OR LOWER(jn.li_label) LIKE '%cross - device%'
+                        OR LOWER(jn.campaign_name) LIKE '%cross-device%'
+                        OR LOWER(jn.li_label) LIKE '%cross-device%'
+                        OR LOWER(jn.campaign_name) LIKE '%cross platform%'
+                        OR LOWER(jn.li_label) LIKE '%cross platform%'
+                        OR LOWER(jn.campaign_name) LIKE '%cross media%'
+                        OR LOWER(jn.li_label) LIKE '%cross media%'
+                        OR LOWER(jn.campaign_name) LIKE '%crossmedia%'
+                        OR LOWER(jn.li_label) LIKE '%crossmedia%'
+                then
+                    'Cross Device'
+                WHEN
+                    jn.geo_flag <> ''
+                THEN
+                    (CASE
+                        WHEN
+                            LOWER(jn.campaign_name) LIKE '%placed%'
+                                OR LOWER(jn.li_label) LIKE '%placed%'
+                        THEN
+                            'Local Lift with Placed'
+                        ELSE (CASE
+                            WHEN
+                                LOWER(jn.campaign_name) LIKE '%local lift%'
+                                    OR LOWER(jn.li_label) LIKE '%local lift%'
+                                    OR LOWER(jn.campaign_name) LIKE '%local-lift%'
+                                    OR LOWER(jn.li_label) LIKE '%local-lift%'
+                                    OR LOWER(jn.campaign_name) LIKE '%local - lift%'
+                                    OR LOWER(jn.li_label) LIKE '%local - lift%'
+                                    OR LOWER(jn.campaign_name) LIKE '%local_lift%'
+                                    OR LOWER(jn.li_label) LIKE '%local_lift%'
+                            THEN
+                                'Local Lift'
+                            ELSE 'Geo Audience'
+                        END)
+                    END)
+                when
+                    LOWER(jn.campaign_name) LIKE '%video%'
+                        OR LOWER(jn.li_label) LIKE '%video%'
+                        OR LOWER(jn.campaign_name) LIKE '%pre roll%'
+                        OR LOWER(jn.li_label) LIKE '%pre roll%'
+                        OR LOWER(jn.campaign_name) LIKE '%pre-roll%'
+                        OR LOWER(jn.li_label) LIKE '%pre-roll%'
+                        OR LOWER(jn.campaign_name) LIKE '%pre - roll%'
+                        OR LOWER(jn.li_label) LIKE '%pre - roll%'
+                then
+                    'Mobile Video'
+                when jn.cmpgn_goal = 'CPA Goal' then 'Mobile Web CPA'
+                else 'Brand CTR'
+            end as Product,
+            jn.campaign_name,
+            ap.line_item_id,
+            jn.li_label,
+            ap.tactic_id,
+            jn.cmpgn_goal,
+            jn.geo_flag,
+            jn.app_flag,
+            IF(LOWER(jn.campaign_name) LIKE '%video%'
+                OR LOWER(jn.li_label) LIKE '%video%'
+                OR LOWER(jn.campaign_name) LIKE '%pre roll%'
+                OR LOWER(jn.li_label) LIKE '%pre roll%'
+                OR LOWER(jn.campaign_name) LIKE '%pre-roll%'
+                OR LOWER(jn.li_label) LIKE '%pre-roll%'
+                OR LOWER(jn.campaign_name) LIKE '%pre - roll%'
+                OR LOWER(jn.li_label) LIKE '%pre - roll%', 'Video', '') AS video_flag,
+            SUM(ap.adv_client_views) AS advertiser_impressions,
+            SUM(ap.cost) AS rfi_cost,
+            SUM(ap.rfi_revenue) AS rfi_revenue,
+            SUM(ap.rfi_clicks) AS rfi_clicks,
+            SUM(ap.rfi_conversions) AS rfi_conversions
+    FROM
+        rfi_meta_data.apollo_mv ap
+    JOIN (SELECT DISTINCT
+        a.campaign_id,
+            a.label AS campaign_name,
+            IF(a.objective_ctr > 0
+                OR a.objective_cpc_cents > 0, 'Click Goal', IF(a.objective_cpa_cents > 0, 'CPA Goal', 'Unknown Goal')) AS cmpgn_goal,
+            b.line_item_id,
+            b.label AS li_label,
+            c.tactic_id,
+            a.end_date,
+            IF(d.restricted_object_id IS NOT NULL, 'Geo-Fence', '') AS geo_flag,
+            IF(e.restricted_object_id IS NOT NULL
+                OR f.restricted_object_id IS NOT NULL, 'App Action', '') AS app_flag
+    FROM
+        campaign a
+    JOIN rfi_meta_data.rfi_line_item_version b ON a.campaign_id = b.campaign_id
+    JOIN rfi_meta_data.tactic c ON b.line_item_id = c.line_item_id
+    LEFT OUTER JOIN rfi_meta_data.generic_restriction_version d ON c.tactic_id = d.restricted_object_id
+        AND d.is_current = 1
+        AND d.restriction_type = 13
+    LEFT OUTER JOIN rfi_meta_data.rfi_assigned_conversion_action_version e ON c.tactic_id = e.restricted_object_id
+        AND e.restricted_object_type = 0
+    LEFT OUTER JOIN rfi_meta_data.assigned_mobile_app f ON a.campaign_id = f.restricted_object_id
+    WHERE
+        (LOWER(a.label) LIKE '%mobile%'
+            OR LOWER(a.label) LIKE '%mobile sold-as%'
+            OR LOWER(b.label) LIKE '%mobile%'
+            OR LOWER(b.label) LIKE '%mobile sold-as%'
+            OR LOWER(b.label) LIKE '% ios%'
+            OR LOWER(b.label) LIKE '%tablet%'
+            OR LOWER(b.label) LIKE '% android %'
+            OR b.line_item_id IN (32967 , 39717, 111665, 111647, 111663, 111659, 108109, 108111, 108859, 111533, 108863, 111535, 108867, 111537, 108869, 111539, 108205, 108851, 106613, 122001))
+            AND a.campaign_id NOT IN (11523 , 11683, 11211, 11523, 12433, 12627, 12765, 12565, 8689, 8011, 9985, 10351, 11989, 13270, 13516, 14541, 14871, 15417, 15617, 14575, 13918, 15603, 15763, 8503, 15753, 13135, 19581, 20023, 17979, 19019, 19581, 20023, 22377, 22233, 22893, 22901, 22943, 23335, 22405, 23995, 16977, 23693, 25873, 24483, 24855, 26017, 27371, 19279, 26541, 28119, 26285, 27337, 28427, 31023, 30337, 25009, 30959, 32391, 29633, 32481, 30955, 32491, 32907, 34517, 35761, 35547, 34077, 34415, 34709, 35781, 34901)
+            AND b.line_item_id NOT IN (47895 , 47899, 47901, 47903, 47905, 47909, 47911, 47913, 47915, 47917, 47921, 47925, 47929, 47933, 47935, 47939, 47941, 47943, 47945, 47947, 47907, 47919, 47937, 47931, 44193, 44197, 23055, 40693, 88469, 94883, 94887, 94627, 94885, 94891, 84181, 84179, 94369, 94371, 95963, 95965, 95971, 94361, 94363, 96275, 96273, 93045, 93043, 93047, 93053, 106473, 106459, 109507, 100463, 108267, 108265, 107291, 108873, 109579, 109577, 109557, 109555, 108349, 108347, 123631, 123637, 118095, 118097)
+            AND b.is_current = 1
+            AND c.is_current = 1) jn ON ap.campaign_id = jn.campaign_id
+        AND ap.line_item_id = jn.line_item_id
+        AND ap.tactic_id = jn.tactic_id
+        AND jn.end_date >= ap.day
+    WHERE
+        DAY >= '20150101'
+            AND DAY <= CURDATE() - 1
+    GROUP BY DATE_FORMAT(DAY, '%Y/%c/%d'), ap.campaign_id , jn.campaign_name , ap.line_item_id , jn.li_label , ap.tactic_id , jn.cmpgn_goal , jn.geo_flag , IF(LOWER(jn.campaign_name) LIKE '%video%'
+        OR LOWER(jn.li_label) LIKE '%video%'
+        OR LOWER(jn.campaign_name) LIKE '%pre roll%'
+        OR LOWER(jn.li_label) LIKE '%pre roll%'
+        OR LOWER(jn.campaign_name) LIKE '%pre-roll%'
+        OR LOWER(jn.li_label) LIKE '%pre-roll%'
+        OR LOWER(jn.campaign_name) LIKE '%pre - roll%'
+        OR LOWER(jn.li_label) LIKE '%pre - roll%', 'Video', '')) a

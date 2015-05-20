@@ -1,0 +1,7 @@
+select date
+, year(date) as year
+,round(sum(rfi_revenue), 2) as revenue
+, round(sum(rfi_cost), 2) as cost
+from rfi_test.jh_monthly_mobile_product
+group by date, year(date)
+order by date asc

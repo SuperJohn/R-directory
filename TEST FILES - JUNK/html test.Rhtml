@@ -1,0 +1,37 @@
+<html>
+
+<head>
+<title>Title</title>
+</head>
+
+<body>
+
+<p>This is an R HTML document. When you click the <b>Knit HTML</b> button a web page will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:</p>
+
+- checks datediff between now and last mobile product update
+- if table is order than 7 days, repopulates table with updated info, else reads from rfi_test table
+- 
+
+
+<!--begin.rcode
+summary(cars)
+
+query <- ("select if(datediff(max(date),curdate())<=-4,'not updated','updated') as is_updated From rfi_test.jh_monthly_mobile_product")
+library(RODBC)
+conn <- odbcConnect("rfi_meta_data")
+is_updated<- sqlQuery(conn, query)
+print(is_updated)
+rm(is_updated)
+end.rcode-->
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(mtcars, 10))
+```
+<p>You can also embed plots, for example:</p>
+
+<!--begin.rcode fig.width=9, fig.height=8
+plot(cars)
+end.rcode-->
+
+</body>
+</html>

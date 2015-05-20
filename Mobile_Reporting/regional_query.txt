@@ -1,0 +1,17 @@
+select year(day) as year
+, month(day) as month
+, month_year
+, region
+, round(sum(rfi_revenue), 0) as revenue
+, round(sum(rfi_cost), 0) as cost
+, round(1-( sum(rfi_cost)/sum(rfi_revenue) ),2) as margin
+from rfi_test.jh_monthly_mobile_product
+where lower(region) <> "brazil"
+and lower(region) <> "australia"
+and lower(region) <> " "
+and region is not null
+group by year(day)
+, month(day)
+, month_year 
+, region
+order by year(day), month(day) asc

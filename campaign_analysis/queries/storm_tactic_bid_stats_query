@@ -1,0 +1,3 @@
+-- tactic is hyundai tier 2 los angeles
+SELECT *,date(logtime) as date FROM storm.tactic_bid_stats_agg
+where tactic_id = 472457;

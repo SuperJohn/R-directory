@@ -1,0 +1,36 @@
+use rfi_meta_data; 
+
+SET @days = 5;
+SET @cid = '60575';
+
+SELECT sum(a.adv_impressions) as adv_impressions, sum(a.spend) as spend, 
+    sum(a.adv_thisday_conversions) as adv_thisday_conversions, sum(a.cost) as cost, sum(a.adv_clicks) as adv_clicks, 
+    sum(a.rfi_thisday_conversions_click_through) as rfi_thisday_conversions_click_through, 
+    sum(a.rfi_thisday_conversions) as rfi_thisday_conversions, a.device, a.date, lv.label as line_item, 
+    tv.label as tactic, a.line_item_id, a.tactic_id, if(pbv.is_publisher, pbv.label, NULL) as publisher, 
+    cv.label as campaign, a.views_source, a.clicks_source, a.conversions_source, a.thisday_conversions_source FROM
+ (SELECT
+    sum(adv_server_views) as adv_impressions, sum(cost_to_advertiser) as spend, 
+    sum(adv_thisday_conversions) as adv_thisday_conversions, sum(amv.cost) as cost, sum(adv_clicks) as adv_clicks, 
+    sum(rfi_thisday_conversions_click_through) as rfi_thisday_conversions_click_through, 
+    sum(rfi_thisday_conversions) as rfi_thisday_conversions, amv.device as device, substr(amv.day,1,10) as date, 
+    amv.line_item_id as line_item_id, amv.tactic_id as tactic_id, amv.publisher_id as publisher_id, 
+    amv.campaign_id as campaign_id, adv_server_views_source as views_source, adv_clicks_source as clicks_source, 
+    adv_conversions_source as conversions_source, adv_thisday_conversion_source as thisday_conversions_source
+  FROM apollo_mv_mobile amv 
+  WHERE amv.day BETWEEN DATE_SUB(curdate(), INTERVAL @days DAY) AND amv.day and '2015-05-14 23:59:59' 
+  AND amv.campaign_id= @cid
+  GROUP BY amv.device, substr(amv.day,1,10), amv.line_item_id, amv.tactic_id, amv.publisher_id, amv.campaign_id, 
+            adv_server_views_source, adv_clicks_source, adv_conversions_source, adv_thisday_conversion_source ORDER BY null) a
+    LEFT JOIN rfi_line_item_version lv ON a.line_item_id=lv.line_item_id
+    LEFT JOIN rfi_line_item ON rfi_line_item.current_version_id=lv.version_id
+    LEFT JOIN rfi_tactic_version tv ON a.tactic_id=tv.tactic_id
+    LEFT JOIN rfi_tactic ON rfi_tactic.current_version_id=tv.version_id
+    LEFT JOIN rfi_definer pbv on a.publisher_id=pbv.id
+    LEFT JOIN rfi_campaign_version cv ON a.campaign_id=cv.campaign_id
+    LEFT JOIN rfi_campaign ON rfi_campaign.current_version_id=cv.version_id
+WHERE (lv.line_item_id IS NULL OR rfi_line_item.current_version_id IS NOT NULL) AND 
+    (tv.tactic_id IS NULL OR rfi_tactic.current_version_id IS NOT NULL) AND 
+    (cv.campaign_id IS NULL OR rfi_campaign.current_version_id IS NOT NULL)
+GROUP BY a.device, a.date, lv.label, tv.label, a.line_item_id, a.tactic_id, a.publisher_id, cv.label, a.views_source, 
+          a.clicks_source, a.conversions_source, a.thisday_conversions_source ORDER BY null

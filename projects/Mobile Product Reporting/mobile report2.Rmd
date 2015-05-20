@@ -1,0 +1,211 @@
+
+---
+title: "Mobile Product Reporting"
+author: "super john"
+date: "Thursday, May 07, 2015"
+output: html_document
+---
+```{r echo=FALSE}
+setwd("C:/Users/john/Google Drive/R Directory/projects/Mobile Product Reporting")
+```
+
+has the MySQL table been updated recently? 
+```{r echo = FALSE}
+library(RODBC)
+conn <- odbcConnect("rfi_meta_data")
+
+query_file <- 'last_updated_query.txt'
+query <- readChar(query_file, file.info(query_file)$size)
+last_updated <- sqlQuery(conn,query)
+last_updated
+```
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+#load packages
+library(ggplot2)
+library(plyr)
+library(RODBC)
+library(lubridate)
+library(scales)
+library(reshape2)
+library(sqldf)
+```
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+# set connection
+conn <- odbcConnect("rfi_meta_data")
+#load data
+```
+
+<h1>Mobile <b>Sold-As</b> Monthly Revenue and Cost Summary</h1>
+<p>Represents as media sold-as mobile to client.</p> 
+```{r echo=FALSE, warning=FALSE, message=FALSE, fig.width=10, fig.height=3}
+# Grouping Bars together
+#get data
+query_file <- 'daily_revenue_query.txt'
+query <- readChar(query_file, file.info(query_file)$size)
+daily_revenue <- sqlQuery(conn,query)
+daily_revenue$date<-as.Date(daily_revenue$date, format="%Y/%m/%d")
+# Date Formatting, adding month & year
+daily_revenue$date<-ymd(daily_revenue$date)
+daily_revenue$month<-month(daily_revenue$date, label=TRUE)
+daily_revenue$year<-year(daily_revenue$date)
+# aggregate to monthly
+monthly_revenue2 <- ddply(daily_revenue, .(month,year), numcolwise(sum))
+
+# Then, Reshape
+monthly_revenue2_melt<-as.data.frame(monthly_revenue2[,c("month","year","revenue","cost")])
+monthly_revenue2_melt <-melt(monthly_revenue2_melt, id = c("month","year"))
+# create grouped bar chart
+g<-ggplot(monthly_revenue2_melt, aes(x=month, y=value, fill=variable)) 
+g + geom_bar(position="dodge", stat="identity",colour="black") + theme(axis.text.x = element_text(angle=15, hjust=1)) + theme_minimal() + scale_fill_brewer(palette = "Blues") + xlab("Month") + ylab("Revenue") + geom_text(size=3,aes(label=sprintf("$ %3.0f", round(value/1000,0)),position="dodge"), vjust=-.5, colour="black")+ facet_wrap(~ year, scale = "free")+scale_y_continuous(name="Revenue", labels = comma)
+# http://stackoverflow.com/questions/11653268/adding-labels-to-ggplot-bar-chart
+# +scale_x_datetime()
+
+```
+
+```{r echo = FALSE}
+query_file <- 'monthly_revenue_query.txt'
+query <- readChar(query_file, file.info(query_file)$size)
+monthly_revenue <- sqlQuery(conn,query)
+monthly_revenue[,c(4:7,10:11)]<-prettyNum(monthly_revenue[,c(4:7,10:11)],big.mark=",",scientific=F)
+knitr::kable(monthly_revenue[,c(3,5,7,8,9,10)] )
+```
+
+<h1>Daily Revenue Trend</h1>
+```{r echo = FALSE, fig.width=10, fig.height=3, warning=FALSE,message=FALSE}
+conn <- odbcConnect("rfi_meta_data")
+query_file <- 'daily_revenue_query.txt'
+query <- readChar(query_file, file.info(query_file)$size)
+daily_revenue <- sqlQuery(conn,query)
+daily_revenue$date<-as.Date(daily_revenue$date, format="%Y/%m/%d")
+# create chart
+ggplot(daily_revenue, aes(x = date, y = revenue,fill="blue")) + 
+  geom_bar(stat = "identity") +
+  theme_classic() +
+  labs(x = "Month", y = "Revenue") +
+  scale_x_date(labels = date_format("%m-%Y"))+ stat_smooth(level = 0.50)+ theme_minimal() + scale_fill_brewer(palette = "Blues")+scale_y_continuous(name="Daily Revenue", labels = comma)+ theme(legend.position="none")
+# + facet_wrap(~ year)
+```
+
+<h1>Regional Summary</h1>
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+conn <- odbcConnect("rfi_meta_data")
+query_file <- 'regional_query.txt'
+query <- readChar(query_file, file.info(query_file)$size)
+regional_data <- sqlQuery(conn,query)
+
+regional_wide <- dcast(regional_data,month_year ~ region, value.var ="revenue")
+knitr::kable(regional_wide)
+```
+
+<h1>Product Breakdown</h1>
+```{r echo=FALSE, warning=FALSE, message=FALSE, fig.width=10, fig.height=3}
+#load data
+query_file <- 'product_breakdown_query.txt'
+query <- readChar(query_file, file.info(query_file)$size)
+product_breakdown <- sqlQuery(conn,query)
+product_breakdown$date<-ymd(product_breakdown$date)
+
+# add daily 'percent of revenue' column
+product_breakdown <- ddply(product_breakdown, "date", transform,
+percent_weight = revenue / sum(revenue) * 100)
+
+# Create Chart
+p <- ggplot(product_breakdown, aes(x=date, y=percent_weight, fill=product)) 
+p + geom_bar(stat="identity") + theme_minimal()+ scale_fill_brewer(
+palette = "Paired") 
+```
+
+<h1>Product Breakdown Monthly</h1>
+```{r echo=FALSE, warning=FALSE, message=FALSE, fig.width=10, fig.height=3}
+# product breakdown by week
+product_breakdown$week<-week(product_breakdown$date)
+product_breakdown$month<-month(product_breakdown$date, label = TRUE)
+product_breakdown$year<-year(product_breakdown$date)
+product_breakdown_m <- ddply(product_breakdown, .(year,month,product,initiative), summarize, revenue=sum(revenue))
+# transform
+pr <- ddply(product_breakdown_m, "month", transform,
+percent_weight = revenue / sum(revenue) * 100)
+# Create Chart
+p <- ggplot(pr, aes(x=month, y=percent_weight, fill=product)) 
+p + geom_bar(stat="identity") + theme_minimal()+ scale_fill_brewer(
+palette = "Paired") 
+
+```
+
+<h1>Product Trends</h1>
+```{r echo=FALSE, warning=FALSE, message=FALSE, fig.width=10, fig.height=3}
+# Create Chart 2
+p <- ggplot(pr, aes(x=month, y=revenue, fill=month)) 
+p + geom_bar(stat="identity") + theme_minimal()+ scale_fill_brewer(
+palette = "Blues") + facet_wrap(~ product) +scale_y_continuous(name="Revenue", labels = comma)+ theme(legend.position="none")+ theme(legend.position="none")
+```
+
+<h1>Monthlies by Mobile Initiative</h1>
+```{r echo=FALSE, warning=FALSE, message=FALSE, fig.width=10, fig.height=2}
+initiative_breakdown <- ddply(product_breakdown, .(year,month,initiative), summarize, revenue=sum(revenue))
+p <- ggplot(initiative_breakdown, aes(x=month, y=revenue, fill=initiative)) 
+p + geom_bar(width = 1,stat="identity") + theme_minimal()+ scale_fill_brewer(palette = "Blues") + facet_wrap(~ year)+scale_y_continuous(name="Revenue", labels = comma)
+```
+
+<h1>Monthly Device Proportions</h1>
+```{r echo=FALSE, warning=FALSE, message=FALSE, fig.width=10, fig.height=3}
+mobile_as_ran_data <- read.csv("C:/Users/john/Google Drive/R Directory/projects/Mobile Product Reporting/mobile_as_ran_data_new.csv")
+#date fromatting
+mobile_as_ran_data$date <- ymd(mobile_as_ran_data$date)
+mobile_as_ran_data$month<-month(mobile_as_ran_data$date, label = TRUE)
+mobile_as_ran_data$year<-year(mobile_as_ran_data$date)
+# lookup table for device - device_type
+device_lookup <- read.csv("C:/Users/john/Google Drive/R Directory/projects/Mobile Product Reporting/device_lookup.csv")
+# join device type to mobile fact table
+mobile_as_ran_data<-merge(mobile_as_ran_data, device_lookup, by="device")
+mobile_as_ran_data$revenue<-as.integer(mobile_as_ran_data$revenue)
+mobile_as_ran_data$cost<-as.integer(mobile_as_ran_data$cost)
+mobile_as_ran_data$conversions<-as.integer(mobile_as_ran_data$conversions)
+
+mobile_as_ran_data_m<- sqldf("select year, month, device_type, sum(revenue) as revenue, sum(cost) as cost, sum(clicks) as clicks, sum(conversions) as conversions, sum(impressions) as impressions from mobile_as_ran_data group by year, month, device_type ")
+# transform
+dv <- ddply(mobile_as_ran_data_m, .(month,year), transform,percent_weight = revenue / sum(revenue) * 100)
+
+# Create Chart
+p <- ggplot(dv, aes(x=month, y=percent_weight, fill=device_type)) 
+p + geom_bar(stat="identity") + theme_minimal()+ scale_fill_brewer(
+  palette = "Blues")+facet_wrap(~year, scale="free")
+```
+
+<h1>Monthly Device Type Trends</h1>
+```{r echo=FALSE, warning=FALSE, message=FALSE, fig.width=10, fig.height=3}
+# Create Chart 2
+p <- ggplot(mobile_as_ran_data_m, aes(x=month, y=revenue, fill=month)) 
+p + geom_bar(stat="identity") + theme_minimal()+ scale_fill_brewer(
+palette = "Blues") + facet_wrap(~ device_type) +scale_y_continuous(name="Revenue", labels = comma)
+```
+<h1> Roadmap </h1>
+<ul>
+<li>margin in lieu of cost in revene / cost chart(1)
+<li>product sold-as / ran-as by region, i.e. what products are driving growth? what's working where? 
+<li>product by device sold-as / ran-as
+<li>sold-as vs ran-as analysis
+<li>long-term device-type trend line graph
+<li>long-term device trend line graph
+<li>revenue, margin by device
+<li>margin by product
+<li>data tables on product and device
+</ul>
+<br>
+<hr>
+
+<h1 style="color:red"> THIS HAS BEEN A TEAM DUBCAT PRODUCTION</h1>
+<div align="center">
+<a href="http://s1276.photobucket.com/user/staffpicks/media/Space%20Cats/spcecat-in-glasses.gif.html" target="_blank"><img src="http://i1276.photobucket.com/albums/y462/staffpicks/Space%20Cats/spcecat-in-glasses.gif" border="0" alt="space cats photo spcecat-in-glasses.gif"/>
+</a>
+</div>
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# cleaning up
+# write backup datasets to csv for project, then close out 
+rm(query)
+rm(query_file)
+rm(regional_data)
+#odbcClose("rfi_meta_data")
+```

@@ -1,0 +1,159 @@
+---
+title: "johns_test"
+author: "john houghton"
+date: "Friday, January 09, 2015"
+output: 
+  html_document:
+    toc: true
+runtime: shiny
+---
+# Trended Performance with dygraphs()
+```{r, echo=FALSE}
+shinyAppDir(
+  system.file("examples/jh_dygraphs", package="shiny"),
+  options=list(
+    width="100%", height = 500
+  )
+)
+```
+
+
+#### Example: Action Report Data Table & Embedded Application
+
+```{r, echo=FALSE}
+shinyAppDir(
+  system.file("examples/jh_text_input", package="shiny"),
+  options=list(
+    width="100%", height = 200
+  )
+)
+```
+
+# Action Report
+```{r, echo = FALSE}
+# Enter your action ids here, comma separated
+action_ids <- "20525217,20524903"
+```
+
+**[ Here, I'm invisibly loading a live action_report ]**
+
+```{r, echo=FALSE}
+library(RODBC)
+conn <- odbcConnect("rfi_meta_data")
+action_report_query <- ("SELECT   c.campaign_name AS campaign_name
+                        , c.action_name AS action_name
+                        , c.conversion_day AS conversion_day
+                        , SUM(c.click_through) as click_through
+                        , SUM(view_through) as view_through
+                        , SUM(c.click_through) + SUM(view_through) AS total_conversions 
+                        
+                        FROM (   
+                          SELECT cav.name AS action_name  
+                          , IF(b.campaign_id=0,'alien',c.label) AS campaign_name
+                          , b.*
+                            FROM  
+                          (	
+                            SELECT  ca.current_version_id AS current_version_id	
+                            , a.click_through + a.view_through AS total_conversions
+                            , a.* 
+                              FROM rfi_meta_data.rfi_aggregate_conversion_action_agg a	
+                            LEFT JOIN rfi_conversion_action ca ON a.conversion_action_id=ca.id
+                            WHERE a.conversion_action_id IN (%s) 	
+                            AND conversion_day BETWEEN DATE_SUB(NOW(), INTERVAL 90 DAY) AND NOW()
+                            #NAME?
+                          ) b	
+                          LEFT JOIN rfi_conversion_action_version cav ON cav.version_id=b.current_version_id	
+                          LEFT JOIN campaign c ON b.campaign_id=c.id	
+                        ) c	
+                        
+                        GROUP BY c.campaign_name	
+                        , c.action_name
+                        , c.conversion_day
+                        ORDER BY conversion_day DESC"	) 
+action_report <- sqlQuery(conn, sprintf(action_report_query, action_ids)) 
+
+
+```
+
+```{r, echo=FALSE}
+library(ggplot2)
+inputPanel(
+  
+  selectInput("campaign_name", label = "Alien vs Credited:",
+              choices = c("alien","Ski.com Fall. Sep 2014 - Jan 2015"), selected = "alien"),
+  
+inputPanel(
+  selectInput("action_name", label = "Action Name:",
+              choices = c(retargeting = "Ski.com - Retargeting Pixel", conversion = "Ski.com - Request a Quote Conversion" ), selected = "Ski.com - Request a Quote Conversion"),  
+  
+  sliderInput("date_range", label = "Date Range:",
+              min = 7, max = 70, value = 28, step = 7)
+              )
+          )
+
+renderPlot({
+  ggplot(subset(action_report,campaign_name == input$campaign_name & conversion_day > Sys.Date()-input$date_range & action_name %in% input$action_name), aes(x = conversion_day, y = total_conversions, colour = action_name)) + stat_smooth(level = 0.99) + geom_point() + xlab(input$campaign_name)
+})
+```
+
+
+## Example: Action Report Data Table & Embedded Application
+
+```{r, echo=FALSE}
+shinyAppDir(
+  system.file("examples/jh_datatables_actions", package="shiny"),
+  options=list(
+    width="100%", height=550
+  )
+)
+```
+
+Note the use of the `height` parameter to determine how much vertical space the embedded application should occupy.
+
+You can also use the `shinyApp` function to define an application inline rather then in an external directory.
+
+In all of R code chunks above the `echo = FALSE` attribute is used. This is to prevent the R code within the chunk from rendering in the document alongside the Shiny components.
+
+## Example: Delivery by Publisher
+
+# Checklist 
+### Margin / Performance Correlation Analysis
+##### Ad rejections
+##### Model Changes
+##### Model Calibration
+##### Day of Week Pacing Variance
+
+
+# Models Summary
+#### Changes in models for this campaign
+```{r, echo=FALSE}
+library(RODBC)
+conn <- odbcConnect("rfi_meta_data")
+model_change_query <-("
+SELECT old_me_conversion as 'models_name'
+, old_m_conversion as 'model_ids'
+, date(snapshot_date) as 'change_date'
+ FROM rfi_analytics.ds_campaign_model_change_history
+where campaign_id = 34377;
+")
+model_change <- sqlQuery(conn,model_change_query) 
+model_change
+
+```
+
+***
+# Project Outline: Given a campaign_id
+* Trended Performance
+  + By Line Item
+  + By tactic
+  + CTR vs CPA
+* Action Report
+  + Trended by campaign_id, action_name, date_range
+  + Data Sheet, to see raw #s with same filter as chart ^
+  + Download Report Option
+* Day of Week Pacing Variance Analysis
+* Model Calibration
+* Viewability
+* Margin Snapshot
+* Attribution Snapshot
+

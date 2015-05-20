@@ -1,0 +1,56 @@
+Market Name,Region,Code,Market Name,Region
+Cedar Falls,Central,CED,Cedar Falls,Central
+Chicago,Central,CHI,Chicago,Central
+Cincinnati,Central,CIN,Cincinnati,Central
+Cleveland,Central,CLE,Cleveland,Central
+Columbus,Central,COL,Columbus,Central
+Dayton,Central,DAY,Dayton,Central
+Detroit,Central,DET,Detroit,Central
+Kansas City,Central,KAN,Kansas City,Central
+Louisville,Central,LOU,Louisville,Central
+Madison,Central,MAD,Madison,Central
+Milwaukee,Central,MIL,Milwaukee,Central
+Minnesota,Central,MIN,Minnesota,Central
+Omaha,Central,OMA,Omaha,Central
+St. Louis,Central,STL,St. Louis,Central
+Toledo,Central,TOL,Toledo,Central
+Albany,Eastern,ALB,Albany,Eastern
+Boston,Eastern,BOS,Boston,Eastern
+Buffalo,Eastern,BUF,Buffalo,Eastern
+Burlington,Eastern,BUR,Burlington,Eastern
+Harrisburg,Eastern,HRS,Harrisburg,Eastern
+Hartford,Eastern,HTF,Hartford,Eastern
+New York City,No,No,New York City,No
+Philadelphia,Eastern,PHI,Philadelphia,Eastern
+Pittsburgh,Eastern,PIT,Pittsburgh,Eastern
+Portland (ME),Eastern,POR,Portland (ME),Eastern
+Providence,Eastern,PRO,Providence,Eastern
+Rochester,Eastern,ROC,Rochester,Eastern
+Springfield,Eastern,SPR,Springfield,Eastern
+Syracuse,Eastern,SYR,Syracuse,Eastern
+Wilkes-Barre,Eastern,WIL,Wilkes-Barre,Eastern
+Albuquerque,South Central,ABQ,Albuquerque,South Central
+Baton Rouge,South Central,BAT,Baton Rouge,South Central
+Birmingham,South Central,BIR,Birmingham,South Central
+Dallas,South Central,DAL,Dallas,South Central
+El Paso,South Central,ELP,El Paso,South Central
+Huntsville,South Central,HUN,Huntsville,South Central
+Knoxville,South Central,KNO,Knoxville,South Central
+Little Rock,South Central,LIT,Little Rock,South Central
+McAllen,South Central,MCA,McAllen,South Central
+Memphis,South Central,MEM,Memphis,South Central
+Mobile,South Central,MOB,Mobile,South Central
+Nashville,South Central,NAS,Nashville,South Central
+Oklahoma City,South Central,OKC,Oklahoma City,South Central
+San Antonio,South Central,SAN,San Antonio,South Central
+Tulsa,South Central,TUL,Tulsa,South Central
+Wichita Falls,South Central,WIC,Wichita Falls,South Central
+California,Western,,California,Western
+Los Angeles,Western,LOS,Los Angeles,Western
+San Diego,Western,SDO,San Diego,Western
+#REF!,Central,PEO,#N/A,Central
+Western,Western,CAL,California,Western
+Central,Central,CEN,Central,Central
+Eastern,Eastern,EST,Eastern,Eastern
+South Central,South Central,SCR,South Central,South Central
+Eastern,Eastern,NYC,New York,Eastern

@@ -1,0 +1,16 @@
+use modeling; 
+select line_item_id
+, period
+, date(refresh_time) as refresh_time
+, description as site
+, sum(views) as impressions
+, sum(clicks) as clicks
+from campaign_insights_new
+where campaign_id = 59905
+and feature = 'site'
+and description <> '_TOTAL_'
+and period=7
+group by line_item_id
+, period
+, refresh_time
+, description
